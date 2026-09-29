@@ -313,9 +313,14 @@ src/
 The single place for the API URL, tokens and requests. Every `*-api.ts`
 module calls `apiRequest()`, and none of them handle tokens themselves.
 
-- **Base URL:** `EXPO_PUBLIC_API_URL`.
-  - In development, a localhost URL is routed through Metro's `/__api` proxy.
-  - Release builds use the URL as-is.
+- **Base URL:** `EXPO_PUBLIC_API_URL`, e.g. `http://localhost:8787/v1`.
+  - In development, a localhost URL is routed through Metro's `/__api` proxy,
+    keeping its path, e.g. `http://localhost:8081/__api/v1`.
+  - Metro's address is read from where the JS bundle was loaded (React
+    Native's `SourceCode` module). `Constants.expoConfig.hostUri` isn't set
+    without `expo-dev-client`, so it's only a fallback.
+  - Release builds use the URL as-is. A release build with a localhost URL
+    can never reach the backend from a phone.
 - **Tokens:** kept in SecureStore with an in-memory cache. The `Bearer`
   header is attached automatically.
 - **401 handling:** one shared refresh (`/auth/refresh`), then the request is
@@ -396,7 +401,7 @@ running.
 
 | Variable | Purpose |
 |---|---|
-| `EXPO_PUBLIC_API_URL` | Backend URL. Leave as `http://localhost:8787` for development. |
+| `EXPO_PUBLIC_API_URL` | Backend URL, including the `/v1` prefix. Leave as `http://localhost:8787/v1` for development. |
 | `EXPO_PUBLIC_ONESIGNAL_APP_ID` | OneSignal app ID (push notifications). |
 | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Google Cloud **Web** OAuth client ID (Google Sign-In). |
 | `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Google Cloud **iOS** OAuth client ID (iOS only). |
@@ -435,7 +440,7 @@ ipconfig getifaddr en0
 
 # 3. Build with that IP baked in (.env stays untouched for development)
 cd android
-EXPO_PUBLIC_API_URL=http://<mac-ip>:8787 ./gradlew assembleRelease
+EXPO_PUBLIC_API_URL=http://<mac-ip>:8787/v1 ./gradlew assembleRelease
 
 # Output: android/app/build/outputs/apk/release/app-release.apk
 adb install -r app/build/outputs/apk/release/app-release.apk

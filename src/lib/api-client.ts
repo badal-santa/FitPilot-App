@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
-import { Platform } from "react-native";
+import { NativeModules, Platform, TurboModuleRegistry } from "react-native";
 
 /**
  * Single place for everything network-related: the API base URL, the
@@ -25,7 +25,35 @@ const LOOPBACK_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"];
 // calls through Metro instead: metro.config.js proxies /__api/* to the local
 // backend. The device can always reach Metro (it's where the JS bundle comes
 // from) — USB, Wi-Fi or emulator — so this needs no extra `adb reverse`.
+// The configured path is kept: http://localhost:8787/v1 → <metro>/__api/v1.
 // Release builds, or a non-localhost EXPO_PUBLIC_API_URL, use the URL as-is.
+
+type SourceCodeModule = { getConstants?: () => { scriptURL?: string }; scriptURL?: string };
+
+// Where this app's JS bundle was downloaded from, e.g. "http://localhost:8081"
+// (USB, via Expo's automatic adb reverse), "http://192.168.1.132:8081" (Wi-Fi)
+// or "http://10.0.2.2:8081" (emulator). Read from React Native's SourceCode
+// module (the same value its dev tools use) through the public
+// TurboModuleRegistry API. Constants.expoConfig.hostUri is only filled in by
+// expo-dev-client / Expo Go, which this project doesn't use — just a fallback.
+function getMetroOrigin(): string | null {
+  try {
+    const sourceCode =
+      TurboModuleRegistry.get<SourceCodeModule & import("react-native").TurboModule>("SourceCode") ??
+      (NativeModules.SourceCode as SourceCodeModule | undefined);
+    const scriptURL = sourceCode?.getConstants?.().scriptURL ?? sourceCode?.scriptURL;
+    // Only a bundle served over http(s) means Metro — a release build's
+    // embedded bundle has a file path here.
+    const origin = scriptURL?.match(/^https?:\/\/[^/]+/)?.[0];
+    if (origin) return origin;
+  } catch {
+    // Fall through to hostUri.
+  }
+
+  const hostUri = Constants.expoConfig?.hostUri;
+  return hostUri ? `http://${hostUri}` : null;
+}
+
 function resolveApiUrl(): string {
   const configured = (process.env.EXPO_PUBLIC_API_URL ?? `http://localhost:${DEFAULT_PORT}`).replace(
     /\/+$/,
@@ -43,13 +71,17 @@ function resolveApiUrl(): string {
     return configured;
   }
 
-  // hostUri is how this device reached Metro, e.g. "localhost:8081" (USB),
-  // "192.168.1.132:8081" (Wi-Fi) or "10.0.2.2:8081" (emulator).
-  const metroHost = Constants.expoConfig?.hostUri;
-  if (metroHost) {
-    return `http://${metroHost}/__api`;
+  const metroOrigin = getMetroOrigin();
+  if (metroOrigin) {
+    const path = url.pathname.replace(/\/+$/, "");
+    return `${metroOrigin}/__api${path}`;
   }
 
+  if (__DEV__) {
+    console.warn(
+      `Couldn't find the Metro dev server — using ${configured} directly, which a phone can't reach.`,
+    );
+  }
   return configured;
 }
 
