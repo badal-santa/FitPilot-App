@@ -12,7 +12,15 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import Screen from "@/components/common/Screen";
 import { useToast } from "@/components/common/Toast";
@@ -123,133 +131,143 @@ export default function EditProfileScreen({ navigation }: Props) {
         <View className="h-10 w-10" />
       </View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Avatar */}
-        <View className="mt-6 items-center">
-          <View
-            className="h-24 w-24 items-center justify-center overflow-hidden rounded-full"
-            style={{
-              shadowColor: colors.primary,
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.35,
-              shadowRadius: 16,
-              elevation: 6,
-            }}
-          >
-            <LinearGradient
-              colors={[colors.primary, colors.primaryDark]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ position: "absolute", height: "100%", width: "100%" }}
-            />
-            <Text className="font-extrabold text-2xl text-bg">{getInitials(name)}</Text>
-          </View>
-          <Pressable className="mt-3 flex-row items-center gap-1.5 active:opacity-70">
-            <Camera size={14} color={colors.primary} />
-            <Text className="font-semibold text-xs" style={{ color: colors.primary }}>
-              Change Photo
-            </Text>
-          </Pressable>
-        </View>
-
-        {/* Name */}
-        <Field label="Name" value={name} onChangeText={setName} />
-
-        {/* Goal */}
-        <Text className="mb-2 mt-5 font-medium text-xs text-text-muted">Fitness Goal</Text>
-        <View className="flex-row gap-3">
-          {GOALS.map((g) => {
-            const selected = goal === g.id;
-            const Icon = g.icon;
-            return (
-              <Pressable
-                key={g.id}
-                onPress={() => setGoal(g.id)}
-                className="flex-1 items-center gap-1.5 rounded-2xl border py-3"
-                style={{
-                  borderColor: selected ? colors.primary : colors.border,
-                  backgroundColor: selected ? colors.surfaceAlt : colors.surface,
-                }}
-              >
-                <Icon size={18} color={selected ? colors.primary : colors.textFaint} />
-                <Text
-                  className={selected ? "font-bold text-[11px]" : "font-medium text-[11px]"}
-                  style={{ color: selected ? colors.primary : colors.textFaint }}
-                >
-                  {GOAL_LABEL[g.id]}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Gender */}
-        <Text className="mb-2 mt-5 font-medium text-xs text-text-muted">Gender</Text>
-        <View className="flex-row gap-3">
-          <GenderOption label="Male" selected={gender === "male"} onPress={() => setGender("male")} />
-          <GenderOption
-            label="Female"
-            selected={gender === "female"}
-            onPress={() => setGender("female")}
-          />
-        </View>
-
-        <Field label="Age" value={age} onChangeText={setAge} suffix="years" />
-        <Field label="Height" value={height} onChangeText={setHeight} suffix="cm" />
-        <Field label="Weight" value={weight} onChangeText={setWeight} suffix="kg" />
-
-        {/* Activity level */}
-        <Text className="mb-2 mt-5 font-medium text-xs text-text-muted">Activity Level</Text>
-        <Pressable
-          onPress={() => setActivityOpen((v) => !v)}
-          className="flex-row items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4"
-        >
-          <Text className="font-semibold text-sm text-text">
-            {ACTIVITY_LEVEL_LABEL[activityLevel].split(" — ")[0]}
-          </Text>
-          {activityOpen ? (
-            <ChevronUp size={18} color={colors.textMuted} />
-          ) : (
-            <ChevronDown size={18} color={colors.textMuted} />
-          )}
-        </Pressable>
-
-        {activityOpen ? (
-          <View className="mt-3 gap-2 rounded-2xl border border-border bg-surface p-2">
-            {ACTIVITY_LEVELS.map((level) => (
-              <Pressable
-                key={level}
-                onPress={() => {
-                  setActivityLevel(level);
-                  setActivityOpen(false);
-                }}
-                className="rounded-xl px-3 py-3"
-                style={{
-                  backgroundColor: activityLevel === level ? colors.surfaceAlt : "transparent",
-                }}
-              >
-                <Text className="font-medium text-sm text-text">
-                  {ACTIVITY_LEVEL_LABEL[level].split(" — ")[0]}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-
-        <View className="h-6" />
-      </ScrollView>
-
-      <Pressable
-        onPress={handleSave}
-        disabled={saving}
-        className="mb-4 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-primary active:opacity-90"
-        style={{ opacity: saving ? 0.5 : 1 }}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <Check size={17} color={colors.bg} strokeWidth={2.5} />
-        <Text className="font-bold text-base text-bg">
-          {saving ? "Saving..." : "Save Changes"}
-        </Text>
-      </Pressable>
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
+          {/* Avatar */}
+          <View className="mt-6 items-center">
+            <View
+              className="h-24 w-24 items-center justify-center overflow-hidden rounded-full"
+              style={{
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.35,
+                shadowRadius: 16,
+                elevation: 6,
+              }}
+            >
+              <LinearGradient
+                colors={[colors.primary, colors.primaryDark]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ position: "absolute", height: "100%", width: "100%" }}
+              />
+              <Text className="font-extrabold text-2xl text-bg">{getInitials(name)}</Text>
+            </View>
+            <Pressable className="mt-3 flex-row items-center gap-1.5 active:opacity-70">
+              <Camera size={14} color={colors.primary} />
+              <Text className="font-semibold text-xs" style={{ color: colors.primary }}>
+                Change Photo
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Name */}
+          <Field label="Name" value={name} onChangeText={setName} />
+
+          {/* Goal */}
+          <Text className="mb-2 mt-5 font-medium text-xs text-text-muted">Fitness Goal</Text>
+          <View className="flex-row gap-3">
+            {GOALS.map((g) => {
+              const selected = goal === g.id;
+              const Icon = g.icon;
+              return (
+                <Pressable
+                  key={g.id}
+                  onPress={() => setGoal(g.id)}
+                  className="flex-1 items-center gap-1.5 rounded-2xl border py-3"
+                  style={{
+                    borderColor: selected ? colors.primary : colors.border,
+                    backgroundColor: selected ? colors.surfaceAlt : colors.surface,
+                  }}
+                >
+                  <Icon size={18} color={selected ? colors.primary : colors.textFaint} />
+                  <Text
+                    className={selected ? "font-bold text-[11px]" : "font-medium text-[11px]"}
+                    style={{ color: selected ? colors.primary : colors.textFaint }}
+                  >
+                    {GOAL_LABEL[g.id]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Gender */}
+          <Text className="mb-2 mt-5 font-medium text-xs text-text-muted">Gender</Text>
+          <View className="flex-row gap-3">
+            <GenderOption label="Male" selected={gender === "male"} onPress={() => setGender("male")} />
+            <GenderOption
+              label="Female"
+              selected={gender === "female"}
+              onPress={() => setGender("female")}
+            />
+          </View>
+
+          <Field label="Age" value={age} onChangeText={setAge} suffix="years" />
+          <Field label="Height" value={height} onChangeText={setHeight} suffix="cm" />
+          <Field label="Weight" value={weight} onChangeText={setWeight} suffix="kg" />
+
+          {/* Activity level */}
+          <Text className="mb-2 mt-5 font-medium text-xs text-text-muted">Activity Level</Text>
+          <Pressable
+            onPress={() => setActivityOpen((v) => !v)}
+            className="flex-row items-center justify-between rounded-2xl border border-border bg-surface px-4 py-4"
+          >
+            <Text className="font-semibold text-sm text-text">
+              {ACTIVITY_LEVEL_LABEL[activityLevel].split(" — ")[0]}
+            </Text>
+            {activityOpen ? (
+              <ChevronUp size={18} color={colors.textMuted} />
+            ) : (
+              <ChevronDown size={18} color={colors.textMuted} />
+            )}
+          </Pressable>
+
+          {activityOpen ? (
+            <View className="mt-3 gap-2 rounded-2xl border border-border bg-surface p-2">
+              {ACTIVITY_LEVELS.map((level) => (
+                <Pressable
+                  key={level}
+                  onPress={() => {
+                    setActivityLevel(level);
+                    setActivityOpen(false);
+                  }}
+                  className="rounded-xl px-3 py-3"
+                  style={{
+                    backgroundColor: activityLevel === level ? colors.surfaceAlt : "transparent",
+                  }}
+                >
+                  <Text className="font-medium text-sm text-text">
+                    {ACTIVITY_LEVEL_LABEL[level].split(" — ")[0]}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+
+          <View className="h-6" />
+        </ScrollView>
+
+        <Pressable
+          onPress={handleSave}
+          disabled={saving}
+          className="mb-4 h-14 flex-row items-center justify-center gap-2 rounded-2xl bg-primary active:opacity-90"
+          style={{ opacity: saving ? 0.5 : 1 }}
+        >
+          <Check size={17} color={colors.bg} strokeWidth={2.5} />
+          <Text className="font-bold text-base text-bg">
+            {saving ? "Saving..." : "Save Changes"}
+          </Text>
+        </Pressable>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

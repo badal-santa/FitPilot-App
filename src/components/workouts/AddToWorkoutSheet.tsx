@@ -3,6 +3,7 @@ import {
   type BottomSheetBackdropProps,
   BottomSheetModal,
   BottomSheetView,
+  useBottomSheetModal,
 } from "@gorhom/bottom-sheet";
 import { AlertCircle, Moon } from "lucide-react-native";
 import { forwardRef, useCallback, useState } from "react";
@@ -15,6 +16,8 @@ import { useWorkoutPlan } from "@/hooks/use-workout-plan";
 import { addExerciseToDay } from "@/lib/workout-api";
 import { useAppSelector } from "@/store/hooks";
 
+const SHEET_NAME = "add-to-workout";
+
 type Props = {
   exerciseId: string;
   exerciseName: string;
@@ -25,6 +28,7 @@ const AddToWorkoutSheet = forwardRef<BottomSheetModal, Props>(
     const colors = useThemeColors();
     const insets = useSafeAreaInsets();
     const toast = useToast();
+    const { dismiss } = useBottomSheetModal();
     const isAuthenticated = useAppSelector((state) => state.auth.status === "authenticated");
     const { plan, status } = useWorkoutPlan();
     const [addingDayId, setAddingDayId] = useState<string | null>(null);
@@ -42,6 +46,7 @@ const AddToWorkoutSheet = forwardRef<BottomSheetModal, Props>(
       try {
         await addExerciseToDay(plan.id, dayId, { exerciseId });
         toast.success("Added", `${exerciseName} was added to ${dayName}.`);
+        dismiss(SHEET_NAME);
       } catch (error) {
         toast.error(
           "Couldn't add exercise",
@@ -55,6 +60,7 @@ const AddToWorkoutSheet = forwardRef<BottomSheetModal, Props>(
     return (
       <BottomSheetModal
         ref={ref}
+        name={SHEET_NAME}
         enableDynamicSizing
         backdropComponent={renderBackdrop}
         backgroundStyle={{ backgroundColor: colors.surface }}
